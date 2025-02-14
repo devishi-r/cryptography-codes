@@ -38,7 +38,7 @@ if len(plaintext) != 64 or not set(plaintext).issubset({'0', '1'}):
 # Perform Initial Permutation
 ip_output = initial_permutation(plaintext)
 print("Initial Permutation Output: ", ip_output)
-
+    
 # Perform Final Permutation
 fp_output = final_permutation(ip_output)
 print("Final Permutation Output: ", fp_output)

@@ -47,7 +47,7 @@ def decrypt(ciphertext, key_matrix):
 
     # Multiply ciphertext blocks (rows) with the inverse key matrix
     decrypted_matrix = (ciphertext_matrix @ inverse_key_matrix) % 26
-    decrypted_nums = decrypted_matrix.flatten()
+    decrypted_nums = decrypted_matrix.flatten() 
 
     plaintext = numbers_to_text(decrypted_nums)
     return plaintext
