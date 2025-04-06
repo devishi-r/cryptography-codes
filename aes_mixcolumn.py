@@ -1,83 +1,39 @@
-from copy import deepcopy
-
-# AES MixColumns transformation matrix
-MIX_COLUMNS_MATRIX = [
-    [0x02, 0x03, 0x01, 0x01],
-    [0x01, 0x02, 0x03, 0x01],
-    [0x01, 0x01, 0x02, 0x03],
-    [0x03, 0x01, 0x01, 0x02]
-]
-
-# Function to perform ShiftRows transformation
-def shift_rows(state):
-    new_state = deepcopy(state)
-    # Second row - shift left by 1
-    new_state[1] = new_state[1][1:] + new_state[1][:1]
-    # Third row - shift left by 2
-    new_state[2] = new_state[2][2:] + new_state[2][:2]
-    # Fourth row - shift left by 3
-    new_state[3] = new_state[3][3:] + new_state[3][:3]
-    return new_state
-
-# Galois Field multiplication function
 def galois_mult(a, b):
-    result = 0
-    for i in range(8):
-        if b & 0x01:
-            result ^= a
-        high_bit_set = a & 0x80
+    res = 0
+    for _ in range(8):
+        if b & 1:
+            res ^= a
+        h = a & 0x80
         a <<= 1
-        if high_bit_set:
-            a ^= 0x1B  # Irreducible polynomial for AES (x^8 + x^4 + x^3 + x + 1)
+        if h:
+            a ^= 0x1b
         b >>= 1
-    return result & 0xFF
+    return res & 0xff
 
-# Function to perform MixColumns transformation
-def mix_columns(state):
-    new_state = deepcopy(state)
-    for col in range(4):
-        for row in range(4):
-            new_state[row][col] = (
-                galois_mult(MIX_COLUMNS_MATRIX[row][0], state[0][col]) ^
-                galois_mult(MIX_COLUMNS_MATRIX[row][1], state[1][col]) ^
-                galois_mult(MIX_COLUMNS_MATRIX[row][2], state[2][col]) ^
-                galois_mult(MIX_COLUMNS_MATRIX[row][3], state[3][col])
-            )
-    return new_state
+def shift_rows(s):
+    return [
+        s[0],
+        s[1][1:] + s[1][:1],
+        s[2][2:] + s[2][:2],
+        s[3][3:] + s[3][:3]
+    ]
 
-# Standard input matrix
-standard_matrix = [
-    [0x32, 0x88, 0x31, 0xE0],
-    [0x43, 0x5A, 0x31, 0x37],
-    [0xF6, 0x30, 0x98, 0x07],
-    [0xA8, 0x8D, 0xA2, 0x34]
-]
+def mix_cols(s):
+    m = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
+    return [[galois_mult(m[r][0], s[0][c]) ^ galois_mult(m[r][1], s[1][c]) ^
+             galois_mult(m[r][2], s[2][c]) ^ galois_mult(m[r][3], s[3][c])
+             for c in range(4)] for r in range(4)]
 
-print("Standard Matrix:")
-for row in standard_matrix:
-    print(" ".join(format(x, '02X') for x in row))
+s = [[0x32, 0x88, 0x31, 0xE0], [0x43, 0x5A, 0x31, 0x37],
+     [0xF6, 0x30, 0x98, 0x07], [0xA8, 0x8D, 0xA2, 0x34]]
 
-# Perform ShiftRows transformation on standard matrix
-shifted_state = shift_rows(standard_matrix)
-print("\nAfter ShiftRows:")
-for row in shifted_state:
-    print(" ".join(format(x, '02X') for x in row))
+print("Original:", [' '.join(f'{x:02X}' for x in r) for r in s])
+s = shift_rows(s)
+print("Shifted:", [' '.join(f'{x:02X}' for x in r) for r in s])
 
-# Example 4x4 AES state matrix (input in hexadecimal format)
-state = [
-    [0xD4, 0xBF, 0x5D, 0x30],
-    [0xE0, 0xB4, 0x52, 0xAE],
-    [0xB8, 0x41, 0x11, 0xF1],
-    [0x1E, 0x27, 0x98, 0xE5]
-]
+s = [[0xD4, 0xBF, 0x5D, 0x30], [0xE0, 0xB4, 0x52, 0xAE],
+     [0xB8, 0x41, 0x11, 0xF1], [0x1E, 0x27, 0x98, 0xE5]]
 
-print("\nBefore MixColumns:")
-for row in state:
-    print(" ".join(format(x, '02X') for x in row))
-
-# Perform MixColumns transformation
-mixed_state = mix_columns(state)
-
-print("\nAfter MixColumns:")
-for row in mixed_state:
-    print(" ".join(format(x, '02X') for x in row))
+print("Original:", [' '.join(f'{x:02X}' for x in r) for r in s])
+s = mix_cols(s)
+print("Mixed:", [' '.join(f'{x:02X}' for x in r) for r in s])
